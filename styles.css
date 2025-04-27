@@ -38,6 +38,9 @@ h1 {
 
 .upload-section {
     margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
 }
 
 .upload-button {
@@ -55,7 +58,7 @@ h1 {
     transform: translateY(-2px);
 }
 
-#file-upload {
+#file-upload, #folder-upload {
     display: none;
 }
 

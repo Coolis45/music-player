@@ -14,9 +14,14 @@
             
             <div class="upload-section">
                 <label for="file-upload" class="upload-button">
-                    <i class="fas fa-upload"></i> Välj musik
+                    <i class="fas fa-upload"></i> Välj filer
                 </label>
                 <input type="file" id="file-upload" accept="audio/*" multiple>
+                
+                <label for="folder-upload" class="upload-button">
+                    <i class="fas fa-folder-open"></i> Välj mapp
+                </label>
+                <input type="file" id="folder-upload" webkitdirectory directory multiple>
             </div>
 
             <div class="playlist-container">

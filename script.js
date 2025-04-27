@@ -16,6 +16,7 @@ class MusicPlayer {
         this.currentSongDisplay = document.getElementById('current-song');
         this.playlistElement = document.getElementById('playlist');
         this.fileUpload = document.getElementById('file-upload');
+        this.folderUpload = document.getElementById('folder-upload');
 
         this.initializeEventListeners();
     }
@@ -23,6 +24,7 @@ class MusicPlayer {
     initializeEventListeners() {
         // File upload handling
         this.fileUpload.addEventListener('change', (e) => this.handleFileUpload(e));
+        this.folderUpload.addEventListener('change', (e) => this.handleFileUpload(e));
 
         // Playback controls
         this.playButton.addEventListener('click', () => this.togglePlay());
@@ -40,16 +42,34 @@ class MusicPlayer {
     }
 
     handleFileUpload(event) {
-        const files = Array.from(event.target.files);
+        const files = Array.from(event.target.files).filter(file => {
+            // Filter only audio files
+            return file.type.startsWith('audio/') || 
+                   file.name.endsWith('.mp3') || 
+                   file.name.endsWith('.wav') || 
+                   file.name.endsWith('.ogg') ||
+                   file.name.endsWith('.m4a');
+        });
         
-        // Sort files by name
-        files.sort((a, b) => a.name.localeCompare(b.name));
+        if (files.length === 0) {
+            alert('Inga ljudfiler hittades. Stödda format: MP3, WAV, OGG, M4A');
+            return;
+        }
+
+        // Sort files by folder structure (if any) and then by name
+        files.sort((a, b) => {
+            const aPath = a.webkitRelativePath || a.name;
+            const bPath = b.webkitRelativePath || b.name;
+            return aPath.localeCompare(bPath);
+        });
         
         // Add files to playlist
         files.forEach(file => {
             const fileURL = URL.createObjectURL(file);
+            // Use relative path if available (for folders), otherwise use filename
+            const displayName = file.webkitRelativePath || file.name;
             this.playlist.push({
-                name: file.name,
+                name: displayName,
                 url: fileURL
             });
         });
