@@ -18,7 +18,8 @@ class MusicPlayer {
         this.fileUpload = document.getElementById('file-upload');
         this.folderUpload = document.getElementById('folder-upload');
 
-        // Kontrollera om vi är på en mobil enhet
+        // Kontrollera om vi är på en iOS-enhet
+        this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         this.initializeEventListeners();
@@ -27,20 +28,21 @@ class MusicPlayer {
 
     setupMobileOptimizations() {
         if (this.isMobile) {
-            // Optimera för mobil
             document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
             
-            // Förbättra mobilupplevelsen
-            this.fileUpload.setAttribute('capture', 'filesystem');
-            
-            // Lägg till stöd för att välja flera filer på iOS
-            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                this.fileUpload.removeAttribute('multiple');
-                this.fileUpload.addEventListener('change', () => {
-                    setTimeout(() => {
-                        this.fileUpload.value = '';  // Återställ för att tillåta samma fil igen
-                    }, 1000);
-                });
+            if (this.isIOS) {
+                // Optimera för iOS Files app
+                this.fileUpload.setAttribute('accept', 'audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/*');
+                
+                // Lägg till stöd för delning från Files app
+                if (navigator.share) {
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') {
+                            // Uppdatera gränssnittet när användaren kommer tillbaka från Files app
+                            this.updatePlaylistDisplay();
+                        }
+                    });
+                }
             }
         }
     }
@@ -76,46 +78,61 @@ class MusicPlayer {
 
     handleFileUpload(event) {
         const files = Array.from(event.target.files).filter(file => {
-            // Filter only audio files
+            // Acceptera alla ljudfiler och specifika format
             return file.type.startsWith('audio/') || 
                    file.name.toLowerCase().endsWith('.mp3') || 
                    file.name.toLowerCase().endsWith('.wav') || 
                    file.name.toLowerCase().endsWith('.ogg') ||
-                   file.name.toLowerCase().endsWith('.m4a');
+                   file.name.toLowerCase().endsWith('.m4a') ||
+                   file.name.toLowerCase().endsWith('.aac');
         });
         
         if (files.length === 0) {
-            alert('Inga ljudfiler hittades. Stödda format: MP3, WAV, OGG, M4A');
+            alert('Inga ljudfiler hittades. Stödda format: MP3, WAV, OGG, M4A, AAC');
             return;
         }
 
-        // Sort files by folder structure (if any) and then by name
+        // Sortera filer efter namn
         files.sort((a, b) => {
-            const aPath = a.webkitRelativePath || a.name;
-            const bPath = b.webkitRelativePath || b.name;
-            return aPath.localeCompare(bPath);
+            const aName = a.webkitRelativePath || a.name;
+            const bName = b.webkitRelativePath || b.name;
+            return aName.localeCompare(bName);
         });
         
-        // Add files to playlist
-        const startIndex = this.playlist.length;  // Spara startindex för nya låtar
+        // Lägg till filer i spellistan
+        const startIndex = this.playlist.length;
+        const addedFiles = [];
+
         files.forEach(file => {
-            const fileURL = URL.createObjectURL(file);
-            // Use relative path if available (for folders), otherwise use filename
-            const displayName = file.webkitRelativePath || file.name;
-            this.playlist.push({
-                name: displayName,
-                url: fileURL
-            });
+            try {
+                const fileURL = URL.createObjectURL(file);
+                const displayName = file.webkitRelativePath || file.name;
+                
+                // Kontrollera om filen redan finns i spellistan
+                const isDuplicate = this.playlist.some(track => track.name === displayName);
+                
+                if (!isDuplicate) {
+                    this.playlist.push({
+                        name: displayName,
+                        url: fileURL
+                    });
+                    addedFiles.push(displayName);
+                }
+            } catch (error) {
+                console.error('Fel vid hantering av fil:', file.name, error);
+            }
         });
 
-        this.updatePlaylistDisplay();
-        
-        // Om det är första uppladdningen eller om inget spelas, starta första nya låten
-        if (!this.isPlaying) {
-            this.playTrack(startIndex);
+        if (addedFiles.length > 0) {
+            this.updatePlaylistDisplay();
+            
+            // Starta uppspelning om inget spelas
+            if (!this.isPlaying && this.playlist.length > 0) {
+                this.playTrack(startIndex);
+            }
         }
 
-        // Återställ input för att tillåta samma filer igen
+        // Återställ input
         event.target.value = '';
     }
 
