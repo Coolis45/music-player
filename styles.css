@@ -39,8 +39,9 @@ h1 {
 .upload-section {
     margin-bottom: 30px;
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
 }
 
 .upload-button {
@@ -49,13 +50,47 @@ h1 {
     padding: 15px 30px;
     border-radius: 50px;
     cursor: pointer;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transition: all 0.3s ease;
+    width: 200px;
 }
 
 .upload-button:hover {
     background: #45a049;
     transform: translateY(-2px);
+}
+
+.upload-info {
+    font-size: 0.8em;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+.mobile-friendly {
+    background: #2196F3;
+}
+
+.mobile-friendly:hover {
+    background: #1976D2;
+}
+
+/* Dölj mappuppladdning på mobila enheter */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none;
+    }
+    
+    .upload-button {
+        width: 100%;
+        max-width: 280px;
+        padding: 20px 30px;
+    }
+    
+    .upload-info {
+        font-size: 0.9em;
+    }
 }
 
 #file-upload, #folder-upload {
